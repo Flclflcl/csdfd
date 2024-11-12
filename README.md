@@ -1,3 +1,3 @@
 # CS-DFD
 
-Following acceptance of the publication, the detailed code will be made available as open source.
+Following acceptance of this paper, the code will be made available as open source.
