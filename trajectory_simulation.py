@@ -34,11 +34,6 @@ def GMR(x, Vxf, sigma, mu, priors, nargout=0):
     nbStates = sigma.shape[2]
     input = np.arange(0, Vxf['d'])
     output = np.arange(Vxf['d'], 2 * Vxf['d'])
-    ## Fast matrix computation (see the commented code for a version involving
-    ## one-by-one computation, which is easier to understand).
-    ##
-    ## Compute the influence of each GMM component, given input x
-    #########################################################################
     Pxi = []
     for i in range(nbStates):
         Pxi.append(priors[0, i] * gaussPDF(x, mu[input, i],
@@ -48,7 +43,6 @@ def GMR(x, Vxf, sigma, mu, priors, nargout=0):
     Pxi = np.reshape(Pxi, [len(Pxi), -1]).T
     beta = Pxi / np.tile(np.sum(Pxi, axis=1) + 1e-300, [nbStates, 1]).T
 
-    #########################################################################
     y_tmp = []
     for j in range(nbStates):
         a = np.tile(mu[output, j], [nbData, 1]).T
@@ -63,8 +57,8 @@ def GMR(x, Vxf, sigma, mu, priors, nargout=0):
     beta_tmp = beta.T.reshape([beta.shape[1], 1, beta.shape[0]])
     y_tmp2 = np.tile(beta_tmp, [1, len(output), 1]) * y_tmp
     y = np.sum(y_tmp2, axis=0)
+    
     ## Compute expected covariance matrices Sigma_y, given input x
-    #########################################################################
     Sigma_y_tmp = []
     Sigma_y = []
     if nargout > 1:
@@ -199,7 +193,6 @@ def energyContour(Vxf, D, x_obs, r_m):
         surface(X, Y, V, x_sim_, y_sim_, V_sim, contour_levels)
 
     return CS
-# , location='bottom'
 
 def load_model(path):
     predictor = BLS_Pred()
@@ -246,7 +239,6 @@ def save_trajectory(x, dx, vu, x_obs, r,x_lim):
     return
 
 def plot_results(x0_all, x_obs, x_new, new_obs, r_m, r_new, goal, Vxf, gmm_params, path, plot_mode, original, extra=10, simulate_length=1200, n_points=400):
-    # data输入为data_  0-40   original=False
     print('plotting results ############### ')
     predict_model = load_model(path)
     x_f = goal[0]
@@ -357,14 +349,14 @@ def plot_results(x0_all, x_obs, x_new, new_obs, r_m, r_new, goal, Vxf, gmm_param
         dx_hist_ = np.array(copy_dx[:, :].T)
 
         obs_Swarning = barrier(x_init, x_obs_m_, r_m, k=0.6)
-        obs_Nwarning = barrier(x_hist, x_obs_m_, r_m, k=0.6)   # x_ini的下一步会发生碰撞
+        obs_Nwarning = barrier(x_hist, x_obs_m_, r_m, k=0.6)   
         zeroS_condition = obs_Swarning.squeeze().T > 0.0001
         zeroN_condition = obs_Nwarning.squeeze().T > 0.0001
 
         # x_init_x = np.copy(x_init[0, :])
         x_init[0, :][zeroS_condition] = 0
         x_sum1 = np.sum(x_init[0, :])
-        x_init[0, :][zeroN_condition] = 0   # 把置零条件归到一处
+        x_init[0, :][zeroN_condition] = 0  
         x_sum2 = np.sum(x_init[0, :])
 
         # x_init_y = np.copy(x_init[1, :])
@@ -402,8 +394,8 @@ def plot_results(x0_all, x_obs, x_new, new_obs, r_m, r_new, goal, Vxf, gmm_param
         # Plot speed                                                       'viridis''RdGy'
         # vel = [vel_x_filter_mesh]
         # vel = np.array(vel.append(vel_y_filter_mesh))
-        vel = dx_hist.reshape(n_points, n_points, -1)   # 只在计算stream的时候用了v
-        norm_vel = np.clip(np.linalg.norm(vel, axis=2), a_min=0, a_max=2)  # norm相当于求了v_xy
+        vel = dx_hist.reshape(n_points, n_points, -1)   
+        norm_vel = np.clip(np.linalg.norm(vel, axis=2), a_min=0, a_max=2)  
         print('vel=', vel)
 
         # CS = plt.contourf(x1_coords, x2_coords, norm_vel, cmap='cividis', levels=50, zorder=1)
@@ -415,8 +407,6 @@ def plot_results(x0_all, x_obs, x_new, new_obs, r_m, r_new, goal, Vxf, gmm_param
         delta_x = max_vel_floor / 10
         cbar = plt.colorbar(CS, ticks=np.arange(min_vel_ceil, max_vel_floor, delta_x))
         cbar.ax.set_xlabel('speed (m/s)')
-        # , location = 'bottom'
-
 
         length = len(x_obs_m_[0])
 
@@ -427,7 +417,6 @@ def plot_results(x0_all, x_obs, x_new, new_obs, r_m, r_new, goal, Vxf, gmm_param
             plt.plot(x, y1, c='k')
             plt.plot(x, y2, c='k')
 
-            # 填充色块
             plt.fill_between(x, y1, y2, color=color, alpha=0.5, linewidth=3)
 
         for i in range(x_obs_m_.shape[1]):
@@ -511,12 +500,9 @@ def u_plot(x_sim, dx_sim, u, simulate_length=4000):
     plt.tight_layout()
     # fig1, ax1 = plt.subplots(subplot_kw=dict(projection='3d'))
     fig1, ax1 = plt.subplots()
-    # plt.title('Compare $v_x$ with $u_x$')  # 标题
-    # plt.plot(x,y)
-    # 常见线的属性有：color,label,linewidth,linestyle,marker等
-    plt.plot(t, dxx, color='grey', label='$dx$')  # 'b'指：color='blue
-    plt.plot(t, z1, 'o-', color='r', label='$u_x$')  # 'b'指：color='blue'
-    plt.legend(loc = 0)  # 显示上面的label
+    plt.plot(t, dxx, color='grey', label='$dx$') 
+    plt.plot(t, z1, 'o-', color='r', label='$u_x$') 
+    plt.legend(loc = 0)  
     ax1.tick_params(axis='both', labelsize=16)
     font1 = {'family': 'Times New Roman', 'weight': 'normal', 'size': 16}
     plt.xlabel('step', fontdict=font1)
@@ -533,10 +519,10 @@ def u_plot(x_sim, dx_sim, u, simulate_length=4000):
     # plt.ylim([0, 30])
     plt.tight_layout()
     fig2, ax2 = plt.subplots()
-    plt.title('Compare $v_y$ with $u_y$')  # 标题
-    plt.plot(t, dxy, color='grey', label='$dy$')  # 'b'指：color='blue
-    plt.plot(t, z2, 'o-', color='r', label='$u_y$')  # 'b'指：color='blue'
-    plt.legend(loc=0)  # 显示上面的label
+    plt.title('Compare $v_y$ with $u_y$') 
+    plt.plot(t, dxy, color='grey', label='$dy$')  
+    plt.plot(t, z2, 'o-', color='r', label='$u_y$')  
+    plt.legend(loc=0) 
     ax2.tick_params(axis='both', labelsize=16)
     font1 = {'family': 'Times New Roman', 'weight': 'normal', 'size': 20}
     plt.xlabel('step', fontdict=font1)
@@ -544,7 +530,7 @@ def u_plot(x_sim, dx_sim, u, simulate_length=4000):
     plt.yticks(fontproperties='Times New Roman', size=18)
     plt.xticks(fontproperties='Times New Roman', size=18)
     colorp = palette(8)
-    # plt.axis('equal')
+
 
     z = np.vstack((z1**2, z2**2))
     norm_u = np.array(np.sqrt(np.sum(z, axis=0)))
@@ -562,8 +548,8 @@ def u_plot(x_sim, dx_sim, u, simulate_length=4000):
     ax3.stem(x, y, norm_u, linefmt='grey', markerfmt='o')
     # ax1.stem(x, y, z2)
     # ax.stem(np.squeeze(x_sim[:, 0, :]), np.squeeze(x_sim[:, 1, :]), np.squeeze(u))
-    ax3.view_init(elev=25,  # 仰角
-                 azim=-45  # 方位角
+    ax3.view_init(elev=25, 
+                 azim=-45  
                  )
     ax3.xaxis.pane.fill = False
     ax3.yaxis.pane.fill = False
@@ -572,7 +558,7 @@ def u_plot(x_sim, dx_sim, u, simulate_length=4000):
     font1 = {'family': 'Times New Roman', 'weight': 'normal', 'size': 20}
     plt.xlabel('x [m]', fontdict=font1)
     plt.ylabel('y [m]', fontdict=font1)
-    ax3.zaxis.set_rotate_label(False)  # 一定要先关掉默认的旋转设置  , rotation=90
+    ax3.zaxis.set_rotate_label(False) 
     ax3.set_zlabel('$||u||$', fontdict=font1)
     # plt.yticks(fontproperties='Times New Roman', size=16)
     # plt.xticks(fontproperties='Times New Roman', size=16)
@@ -586,34 +572,30 @@ def surface(x, y, z, x_sim, y_sim, V_sim, contour_levels):
     fig = plt.figure(figsize=(6, 6))
 
     ax = fig.add_subplot(111, projection='3d')
-    # ax.plot(x_sim, y_sim, V_sim, 'o-', color='r')  # 'b'指：color='blue'
+    # ax.plot(x_sim, y_sim, V_sim, 'o-', color='r') 
     ax.plot_surface(x, y, z, cmap='RdGy')
     plt.rcParams['axes.facecolor'] = 'white'
     ax.contour(x, y, z, contour_levels, zdir='z', offset=-1, cmap='RdGy')
     plt.plot(0, 0, 'b*', markersize=15, linewidth=3, label='target', zorder=12)
-    ax.view_init(elev=35,  # 仰角
-                 azim=-145  # 方位角
+    ax.view_init(elev=35,  
+                 azim=-145  
                  )
     ax.xaxis.pane.fill = False
     ax.yaxis.pane.fill = False
     ax.zaxis.pane.fill = False
-    # ax.tick_params(axis='both', labelsize=16)
     font1 = {'family': 'Times New Roman', 'weight': 'normal', 'size': 18}
     font2 = {'family': 'Times New Roman', 'weight': 'normal', 'size': 15}
     plt.xlabel('x [m]', fontdict=font1)
     plt.ylabel('y [m]', fontdict=font1)
     plt.yticks(fontproperties='Times New Roman', size=16)
     plt.xticks(fontproperties='Times New Roman', size=16)
-    ax.zaxis.set_rotate_label(False)  # 一定要先关掉默认的旋转设置  , rotation=90
+    ax.zaxis.set_rotate_label(False) 
     ax.set_zlabel('$ V $', fontdict=font2)
-    # ax.axis('off')
-    # ax.set_zticks([])  # 不显示z坐标轴
     plt.subplots_adjust(top=1, bottom=0.02, right=0.95, left=0.1, hspace=0, wspace=0)
     plt.grid(True)
     plt.show()
 
 def euclidean_distance(vectors, vector, Sum=True):
-    # 计算向量的欧氏距离
     diff = vectors - vector
     squared_diff = np.square(diff)
     if Sum is True:
@@ -628,7 +610,7 @@ def barrier(x, x_so, r, k=1.1):  # x(state,length)
     G = []
     G_new = []
     G_obs = []
-    # r = 1.5  # 假设障碍物半径一致
+    # r = 1.5  
     # r = r
     # R = 1.35
     R = 0.45
@@ -640,7 +622,7 @@ def barrier(x, x_so, r, k=1.1):  # x(state,length)
     for i in range(num_obs):
         obs_R = np.array((r[i] + R) * k)
         x_obs = x_so[:, i]
-        a = euclidean_distance(x, x_obs[:, np.newaxis])   # 当前各个demo与第i个障碍物的欧式距离
+        a = euclidean_distance(x, x_obs[:, np.newaxis]) 
         # a = np.linalg.norm(x - x_obs[:, np.newaxis])
         a = np.reshape(a, [1, nbData])
         theta = a - obs_R
@@ -653,8 +635,8 @@ def barrier(x, x_so, r, k=1.1):  # x(state,length)
     # G_obs_hist.append(self.G_obs)
     return G_obs
 
-def obs_check(x, x_so, r, k=1.1):    # 找是哪一个障碍物
-    # r = 1.5  # 假设障碍物半径一致
+def obs_check(x, x_so, r, k=1.1): 
+    # r = 1.5 
     r = r
     # R = 1.35
     R = 0.45
@@ -664,7 +646,7 @@ def obs_check(x, x_so, r, k=1.1):    # 找是哪一个障碍物
     for i in range(len(x_so[1, :])):
         obs_R = np.array((r[i] + R) * k)
         x_obs = x_so[:, i]
-        a = euclidean_distance(x, x_obs[:, np.newaxis])  # 欧式距离
+        a = euclidean_distance(x, x_obs[:, np.newaxis])  
         a = np.reshape(a, [1, np.shape(x)[1]])
         theta = a - obs_R
         c = np.sqrt(np.square(theta) + 4 * xi)
@@ -718,7 +700,7 @@ def simulate_trajectories(x_init, x_obs, r, goal, option, Vxf, gmm_parameters, p
     x_hist[0][1, :] = np.array(x_hist[0][1, :])
     # x_hist_inv[0][0, :] = np.tile(x_f, [nbData, 1]).T - x_hist_inv[0][0, :]   # 40，30 to 0，0
     # x_hist_inv[0][1, :] = np.tile(y_f, [nbData, 1]).T - x_hist_inv[0][1, :]
-    x_hist_inv[0][0, :] = x_hist_inv[0][0, :] - np.tile(x_f, [nbData, 1]).T    # 40，30 to 0，0
+    x_hist_inv[0][0, :] = x_hist_inv[0][0, :] - np.tile(x_f, [nbData, 1]).T  
     x_hist_inv[0][1, :] = x_hist_inv[0][1, :] - np.tile(y_f, [nbData, 1]).T
     for i in range(trajectory_length):
         # if i == 631:
@@ -733,7 +715,7 @@ def simulate_trajectories(x_init, x_obs, r, goal, option, Vxf, gmm_parameters, p
         obs_avoid_hist.append(obs_avoid)
 
         # if upgrade > 1:
-        #     with open('./V/V_re' + str(model_id) + '_Ndemo=' + str(nbData) + '.pkl', 'rb') as g:  # 读取pkl文件数据
+        #     with open('./V/V_re' + str(model_id) + '_Ndemo=' + str(nbData) + '.pkl', 'rb') as g: 
         #         gmm_parameters = pickle.load(g, encoding='bytes')
         #     with open('./V/J_re' + str(model_id) + '_Ndemo=' + str(nbData) + '.pkl', 'rb') as v:
         #         Vxf = pickle.load(v, encoding='bytes')
@@ -748,11 +730,12 @@ def simulate_trajectories(x_init, x_obs, r, goal, option, Vxf, gmm_parameters, p
             # dh = h - obs_avoid_hist[i - 1]
             # obs_collision = dh + 0.1*obs_avoid_hist[i - 1] >= 0
             obs_collision = h > 1e-6
-            obs_collision_ind = np.squeeze(obs_collision)   # 碰撞demo序号
+            obs_collision_ind = np.squeeze(obs_collision)   # demo_index
             # ind_obs = obs > 1e-5
             if np.sum(obs_collision_ind) > 0:
-                x_check = x_hist_inv[i][:, obs_collision_ind]  # 碰撞demo位置
-                obs_index = obs_check(x_check, x_obs_, r)      # 获得碰撞demo位置所对应的障碍物序号
+                x_check = x_hist_inv[i][:, obs_collision_ind]  
+                obs_index = obs_check(x_check, x_obs_, r)  
+                
                 # norm_Vx = np.sum(Vx * Vx, axis=0)
                 # dh = h - obs_avoid_hist[i - 1]
                 # if dh[obs_collision_ind]
@@ -793,7 +776,7 @@ def simulate_trajectories(x_init, x_obs, r, goal, option, Vxf, gmm_parameters, p
 
                     # Vdot = np.sum((np.exp(orthogonal_Vx[:, obs_collision_ind]) - 1) * dx, axis=0)
                     # Vdot = np.sum(oVk.reshape(2,1) * dx[:, obs_collision_ind], axis=0)
-                    dx_ = dx[:, obs_collision_ind].copy()       # 避障跟原始的dx很相关
+                    dx_ = dx[:, obs_collision_ind].copy()      
                     Vdot = np.sum(oV.reshape(2, 1) * -dx_, axis=0)
                     norm_Vx = np.sum(oV * oV, axis=0)
                     lambder = Vdot / (norm_Vx + 1e-8)
@@ -886,65 +869,10 @@ def simulate_trajectories(x_init, x_obs, r, goal, option, Vxf, gmm_parameters, p
         # dx_hist_.append(-dx)
         dx_hist.append(dx)
 
-        # if corrected is True:
-        #     # if all(i > 0 for i in np.array(obs_avoid)) > 1e-6:
-        #     for o in range(obs_avoid.shape[1]):
-        #         if obs_avoid[:, o] < 1e-6:
-        #             avoid = True
-        #         else:
-        #             avoid = False
-        #             break
-        #     # avoid = obs_avoid.all() < 1e-6
-        #     while avoid is False:
-        #     # if avoid is False:
-        #     #     pass
-        #     # else:
-        #         print('obs_avoid.all()=', obs_avoid)
-        #         print('collision')
-        #         lyapunov = LyapunovLearner()
-        #         demo_length = np.array(x_hist).shape[0]
-        #         re_demonstrations = np.empty([4, nbData * demo_length])
-        #
-        #         for k in range(demo_length):
-        #             for i in range(nbData):
-        #                 pos = x_hist[k].T
-        #                 vel = dx_hist[k].T
-        #                 p = pos[i].T
-        #                 v = vel[i].T
-        #                 re_demonstrations[:2, i * demo_length:(i + 1) * demo_length] = p[:, np.newaxis]
-        #                 re_demonstrations[2:, i * demo_length:(i + 1) * demo_length] = v[:, np.newaxis]
-        #
-        #         while lyapunov.success:
-        #             print('Optimizing the lyapunov function')
-        #             Vxf['w'] = 1e-4
-        #             V, J = lyapunov.learnEnergy(Vxf, re_demonstrations, lyapunov_learner_params, x_obs, x_new, new_obs,
-        #                                         original=False)
-        #             if lyapunov.success:
-        #                 model_id = np.int64(time.strftime('%Y%m%d%H%M', time.localtime(time.time())))
-        #                 v = open('./V/V_re' + str(model_id) + '_Ndemo=' + str(nbData) + '.pkl', 'wb')
-        #                 pickle.dump(V, v)
-        #                 v.close()
-        #                 j = open('./V/J_re' + str(model_id) + '_Ndemo=' + str(nbData) + '.pkl', 'wb')
-        #                 pickle.dump(J, j)
-        #                 j.close()
-        #                 print('optimization succeeded without violating constraints')
-        #                 break
-        #
-        #         model_id = model_id
-        #         gmm = GMM(num_clusters=gmm_params['num_clusters'])
-        #         gmm.update(re_demonstrations.T, K=gmm_params['num_clusters'], max_iterations=gmm_params['max_iterations'])
-        #         mu, sigma, priors = gmm.mu.T, gmm.sigma.T, gmm.logmass.T
-        #         gmm_parameters = {'mu': mu, 'sigma': sigma, 'priors': priors}
-        #         with open('./G/G_' + str(model_id) + '_Ndemo=' + str(nbData) + '.pkl', 'wb') as fo:  # 将数据写入pkl文件
-        #             pickle.dump(gmm_parameters, fo)
-        #         upgrade += 1 # break
-        #     # break
-        # print('obs_avoid.all()=', obs_avoid.all())
-
 
         x_temp = [np.tile(x_f, [nbData, 1]).T - x_hist[i + 1][0, :]]  # 40，30 to 0，0
         y_temp = [np.tile(y_f, [nbData, 1]).T - x_hist[i + 1][1, :]]
-        # x_temp = [x_hist[i + 1][0, :] + np.tile(x_f, [nbData, 1]).T] # 40，30 to 0，0
+        # x_temp = [x_hist[i + 1][0, :] + np.tile(x_f, [nbData, 1]).T] 
         # y_temp = [x_hist[i + 1][1, :] + np.tile(y_f, [nbData, 1]).T]
         state = np.vstack((x_temp, y_temp))
         # if lyapunov_learner.barrier(state) > 0.01:
@@ -956,11 +884,11 @@ def simulate_trajectories(x_init, x_obs, r, goal, option, Vxf, gmm_parameters, p
     return x_hist, x_hist_inv, dx_hist, u_hist
 
 
-with open('./G/G_goal00_Ndemo=6000.pkl', 'rb') as g:  # 读取pkl文件数据
+with open('./G/G_goal00_Ndemo=6000.pkl', 'rb') as g:  
     gmm_parameters = pickle.load(g, encoding='bytes')
 with open('./V/V_goal00_Ndemo=6000.pkl', 'rb') as v:
     Vxf = pickle.load(v, encoding='bytes')
-# with open('./G/G_small_33_202405221426_Ndemo=6000.pkl', 'rb') as g:  # 读取pkl文件数据
+# with open('./G/G_small_33_202405221426_Ndemo=6000.pkl', 'rb') as g:  
 #     gmm_parameters = pickle.load(g, encoding='bytes')
 # with open('./V/V_small_33_202405221426_Ndemo=6000.pkl', 'rb') as v:
 #     Vxf = pickle.load(v, encoding='bytes')
@@ -1037,7 +965,7 @@ new_obs = False
 # new_obs = True
 DIY = False
 option = 'GMR'
-model_path = './bls_models/bls_deep.npz'
+model_path = './bls_models/bls_deep.npz'  # GMR is better
 predict_model = load_model(model_path)
 # x_sim, x_sim_, _, _ = simulate_trajectories(x_ini, x_obs, x_new, new_obs, option, Vxf, gmm_parameters, predict_model, dt=0.01, trajectory_length=7000, corrected=True, original=False)
 
