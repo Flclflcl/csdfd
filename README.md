@@ -1,4 +1,3 @@
-# CS-DFD
 
 [Demonstration video](https://www.bilibili.com/video/BV1RCUpYQEQ8)
 
